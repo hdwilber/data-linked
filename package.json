@@ -15,7 +15,7 @@
     "type": "git",
     "url": "git@github.com:hdwilber/rest-linked.git"
   },
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@babel/cli": "^7.1.2",
     "@babel/core": "^7.1.2",
