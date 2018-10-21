@@ -14,6 +14,7 @@ const plugins = targets => ([
     // ignore .babelrc (if defined) and use options defined here
     babelrc: true,
     comments: false,
+    runtimeHelpers: true,
   }),
   // copy Flow definitions from source to destination directory
   copy({

@@ -1,2 +1,14 @@
-{ "presets": ["@babel/preset-env"] }
+{
+  "presets": [
+    ["@babel/preset-env", {
+      "modules": false
+    }]
+  ],
+  "plugins": [
+	"@babel/plugin-external-helpers",
+    "@babel/plugin-proposal-object-rest-spread",
+	"@babel/plugin-transform-runtime"
+  ]
+}
+
 
