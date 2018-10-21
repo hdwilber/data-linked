@@ -1,0 +1,12 @@
+{
+  "extends": [
+    "airbnb-base",
+  ],
+  "plugins": [
+  ],
+  "rules": {
+    // special case for rewire __get__
+    "no-underscore-dangle": ["off"],
+    "semi": ["off"],
+  },
+}
