@@ -124,12 +124,29 @@ class TypeManager {
     return data
   }
 
-  async _processSave(spec, info, parent) {
+  async _processSave(spec, info, data) {
     if (Array.isArray(info)) {
-      const resp = Promise.all(info.map(i => this._processSave(spec, i, parent)))
+      const { _save: { isSync } } = spec
+      if (isSync) {
+        const resp = info.reduce(async (acc, i) => {
+          const curr = await acc
+          
+          if (!data.siblings) {
+            data.siblings = []
+          }
+          data.siblings = curr
+
+          const response = await this._processSave(spec, i, data)
+          console.log(response)
+          //curr.push(response)
+          return curr.concat([{ response }])
+        }, Promise.resolve([]))
+        return resp
+      }
+      const resp = Promise.all(info.map(i => this._processSave(spec, i, data)))
       return resp
     }
-    const resInfo = info()
+    const resInfo = info(data)
     const { request } = resInfo
 
     const { resultHandler } = spec._save
@@ -138,23 +155,26 @@ class TypeManager {
     return selfResult
   }
 
-  async _runSave(rawSpec, info, parent) {
+  async _runSave(rawSpec, info, data) {
     const { isArray, spec } = getSpecInfo(rawSpec)
 
     if (isArray) {
       return Array.isArray(info)
-        ? Promise.all(info.map(i => this._runSave(spec, i, parent)))
+        ? Promise.all(info.map(i => this._runSave(spec, i, data)))
         : []
     }
     const { _self } = info
 
-    const selfResult = _self && await this._processSave(spec, _self, parent)
+    const selfResult = _self && await this._processSave(spec, _self, data)
+    const newData = {
+      parent: data,
+      ...selfResult,
+    }
 
     const saveKeys = Object.keys(info).filter(name => name.indexOf('_') !== 0)
     const result = await saveKeys.reduce(async (acc, key) => {
       const current = await acc
-
-      current[key] = await this._runSave(spec[key], info[key], selfResult)
+      current[key] = await this._runSave(spec[key], info[key], { parent: newData})
       return current
     }, Promise.resolve({}))
 
@@ -163,7 +183,7 @@ class TypeManager {
   }
 
   runSave(info) {
-    return this._runSave(this.specs, info, null)
+    return this._runSave(this.specs, info, {})
   }
 
   save(data) {

@@ -1,4 +1,4 @@
-import { TypeManager, Types, MoreTypes } from '../lib';
+import { TypeManager, Types, MoreTypes } from '../src';
 
 const singleInstitution = {
   id: MoreTypes.id,
@@ -35,52 +35,74 @@ const opportunity = {
   },
 }
 
+function getTimer(time) {
+  return new Promise((resolve, reject) => {
+    fetch('http://localhost:3100/api/institutions/5b1cc66ace94c9ae6aefaeb6')
+    .then(s => {
+      console.log('starting time for: %o', time)
+      setTimeout( () => {
+        console.log('complete %o', time)
+        resolve(`Time: ${time}`)
+      }, time)
+    })
+  })
+}
+
 const institution = {
   ...singleInstitution,
-  head: {
-    _format: data => ({
-      value: data.id,
-      text: data.name,
-    }),
-    _save: {
-      as: 'parentId',
-      format: data => data.value,
-    },
-  },
+  //head: {
+    //_format: data => ({
+      //value: data.id,
+      //text: data.name,
+    //}),
+    //_save: {
+      //as: 'parentId',
+      //format: data => data.value,
+    //},
+  //},
   logo: {
     ...MoreTypes.image,
     _save: {
+      isSync: true,
       create: [
-        data => (parent, options) => ({
-          name: 'Create Logo in Institution',
-          request: Promise.resolve('Logo data'),
-        }),
-        data => (parent, options) => ({
-          name: 'Create Logo in Institution - re-query',
-          request: Promise.resolve('Logo data in re-query'),
-        }),
+        data => (data) => {
+          console.log('----1-')
+          console.log(data)
+          return {
+            name: 'Create Logo in Institution',
+            request: getTimer(2000),
+          }
+        },
+        data => (data) => {
+          console.log('----2-')
+          console.log(data)
+          return {
+            name: 'Create Logo in Institution - re-query',
+            request: getTimer(2000),
+          }
+        },
       ],
     },
   },
-  simpleHead: {
-    _save: {
-      as: 'minimal-head',
-    },
-    _target: 'head',
-    _format: data => ({
-      value: data.id,
-      text: data.name,
-    }),
-  },
-  location: {
-    point: {
-      lat: Types.number,
-      lng: Types.number,
-    },
-    zoom: {
-      _default: 10,
-    },
-  },
+  //simpleHead: {
+    //_save: {
+      //as: 'minimal-head',
+    //},
+    //_target: 'head',
+    //_format: data => ({
+      //value: data.id,
+      //text: data.name,
+    //}),
+  //},
+  //location: {
+    //point: {
+      //lat: Types.number,
+      //lng: Types.number,
+    //},
+    //zoom: {
+      //_default: 10,
+    //},
+  //},
   dependencies: [{
     ...singleInstitution,
     _save: {
@@ -90,7 +112,7 @@ const institution = {
       }),
     },
   }],
-  opportunities: [opportunity],
+  //opportunities: [opportunity],
   _save: {
     create: data => (parent, options) => ({
       name: 'Save Institution Data',
@@ -102,7 +124,7 @@ const institution = {
         if (response.ok) {
           const data = await response.json()
           return {
-            data,
+            result: data,
           }
         }
         return {
