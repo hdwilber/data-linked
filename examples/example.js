@@ -1,4 +1,5 @@
 import { TypeManager, Types, MoreTypes } from '../src';
+import getUserInstance from './user'
 
 const singleInstitution = {
   id: MoreTypes.id,
@@ -65,7 +66,7 @@ const institution = {
     _save: {
       isSync: true,
       create: [
-        data => (data) => {
+        data => (data, ref) => {
           console.log('----1-')
           console.log(data)
           return {
@@ -73,7 +74,7 @@ const institution = {
             request: getTimer(2000),
           }
         },
-        data => (data) => {
+        data => (data, ref) => {
           console.log('----2-')
           console.log(data)
           return {
@@ -177,15 +178,25 @@ const defaultFilter = {
   ],
 }
 
+const type2 = new TypeManager(institution)
+console.log(type2.clear())
+
 const type = new TypeManager(institution)
 fetch(`http://localhost:3100/api/institutions/5b1cc66ace94c9ae6aefaeb6/?filter=${JSON.stringify(defaultFilter)}`)
-  .then(res => res.json())
-  .then((data) => {
-  // console.log(data)
-    delete data.id
-    const build = type.fill(data)
-    console.log(build)
-    const saveInfo = type.save(build)
-    console.log(saveInfo)
-    type.runSave(saveInfo, null).then(d => console.log(d))
-  })
+.then(res => res.json())
+.then((data) => {
+// console.log(data)
+  delete data.id
+  const build = type.fill(data)
+  console.log(build)
+  const saveInfo = type.save(build)
+  console.log(saveInfo)
+  type.runSave(saveInfo, null).then(d => console.log(d))
+})
+
+let userInstance = null
+getUserInstance().then(user => {
+  userInstance = user
+console.log(userInstance.restore())
+})
+

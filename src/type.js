@@ -1,19 +1,9 @@
-export function getSpecInfo(rawSpec) {
-  const isArray = Array.isArray(rawSpec)
-  const spec = isArray ? rawSpec[0] : rawSpec
-  const keys = Object.keys(spec).filter(name => name.indexOf('_') !== 0)
-
-  return {
-    isArray,
-    spec,
-    keys,
-  }
-}
+import { getSpecInfo, getSpecKeys } from './utils'
 
 class TypeManager {
   constructor(specs) {
     this.specs = specs
-    this.keys = Object.keys(specs).filter(name => name.indexOf('_') !== 0)
+    this.keys = getSpecKeys(specs)
   }
 
 
@@ -33,10 +23,6 @@ class TypeManager {
     }
     const { _default } = spec
     return typeof _default === 'function' ? _default() : _default
-  }
-
-  clear() {
-    return this._clear(this.specs)
   }
 
   _fill(rawSpec, data) {
@@ -137,8 +123,6 @@ class TypeManager {
           data.siblings = curr
 
           const response = await this._processSave(spec, i, data)
-          console.log(response)
-          //curr.push(response)
           return curr.concat([{ response }])
         }, Promise.resolve([]))
         return resp
@@ -171,7 +155,9 @@ class TypeManager {
       ...selfResult,
     }
 
-    const saveKeys = Object.keys(info).filter(name => name.indexOf('_') !== 0)
+    //const saveKeys = Object.keys(info).filter(name => name.indexOf('_') !== 0)
+    const saveKeys = getSpecKeys(info)
+
     const result = await saveKeys.reduce(async (acc, key) => {
       const current = await acc
       current[key] = await this._runSave(spec[key], info[key], { parent: newData})
@@ -182,8 +168,8 @@ class TypeManager {
     return result
   }
 
-  runSave(info) {
-    return this._runSave(this.specs, info, {})
+  clear() {
+    return this._clear(this.specs)
   }
 
   save(data) {
@@ -191,7 +177,19 @@ class TypeManager {
   }
 
   fill(data) {
+	this.rawData = data
     return this._fill(this.specs, data)
+  }
+
+  restore() {
+	if (this.rawData) {
+	  return this.fill(this.rawData)
+	}
+	return this.clear()
+  }
+
+  runSave(info) {
+    return this._runSave(this.specs, info, {})
   }
 }
 

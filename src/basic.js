@@ -18,9 +18,7 @@ const Types = {
 
 export const MoreTypes = {
   id: {
-    _default() {
-      return Math.random() * 10000
-    },
+    _default: () => (Math.random() * 10000),
   },
   image: {
     file: {

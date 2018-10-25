@@ -1,10 +1,8 @@
-{
-  "presets": [
-    ["@babel/preset-env", {
-      "modules": false
-    }]
-  ],
-  "plugins": [
+'use strict';
+
+module.exports = {
+  presets: ['@babel/preset-env'],
+  plugins: [
 	"@babel/plugin-external-helpers",
     "@babel/plugin-proposal-object-rest-spread",
 	"@babel/plugin-transform-runtime",
@@ -14,6 +12,4 @@
       "async": true,
     }]
   ]
-}
-
-
+};
