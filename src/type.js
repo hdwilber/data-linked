@@ -35,7 +35,10 @@ class TypeManager {
     }
     if (keys.length > 0) {
       return keys.reduce((acc, key) => {
-        const { _target } = spec[key]
+
+        const { spec: subSpec } = getSpecInfo(spec[key])
+        const { _target } = subSpec
+
         const res = this._fill(spec[key], data && data[_target || key])
         if (typeof res !== 'undefined') {
           acc[key] = res
@@ -155,7 +158,6 @@ class TypeManager {
       ...selfResult,
     }
 
-    //const saveKeys = Object.keys(info).filter(name => name.indexOf('_') !== 0)
     const saveKeys = getSpecKeys(info)
 
     const result = await saveKeys.reduce(async (acc, key) => {
