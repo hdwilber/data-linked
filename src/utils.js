@@ -13,4 +13,3 @@ export function getSpecInfo(rawSpec) {
     keys,
   }
 }
-
