@@ -1,12 +1,8 @@
 // plugins that we are going to use
 import babel from 'rollup-plugin-babel';
-import copy from 'rollup-plugin-cpy';
-import flow from 'rollup-plugin-flow';
 
 // list of plugins used during building process
 const plugins = targets => ([
-  // remove flow annotations from output
-  flow(),
   // use Babel to transpile to ES5
   babel({
     // ignore node_modules/ in transpilation process
@@ -15,11 +11,6 @@ const plugins = targets => ([
     babelrc: true,
     comments: false,
     runtimeHelpers: true,
-  }),
-  // copy Flow definitions from source to destination directory
-  copy({
-    files: ['src/*.flow'],
-    dest: 'lib',
   }),
 ]);
 
@@ -32,7 +23,7 @@ export default [{
   // output configuration
   output: {
     // name visible for other scripts
-    name: 'npmLibPackageExample',
+    name: 'restLined',
     // output file location
     file: 'lib/index.esm.js',
     // format of generated JS file, also: esm, and others are available
