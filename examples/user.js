@@ -2,16 +2,20 @@ import { TypeManager, Types, MoreTypes } from '../src';
 
 const PostSpec = {
   id: MoreTypes.id,
-  title: Types.string,
-  body: Types.string,
+  header: {
+    ...Types.string,
+    _target: 'title',
+    target: 'Something default',
+  },
+  text: {
+    ...Types.string,
+    _target: 'body',
+  },
 }
 
 const UserSpec = {
   id: MoreTypes.id,
-  fullname: {
-    ...Types.string,
-    _target: 'name',
-  },
+  name: 'Enter a name',
   email: Types.string,
   address: {
     street: Types.string,
@@ -40,6 +44,8 @@ const UserSpec = {
       _target: 'posts',
     }
   ],
+  inlineDefaultString: 'Inline default',
+  inlineDefaultNumber: 3.141592654,
 }
 
 const userUrl = 'https://jsonplaceholder.typicode.com/users/1'
@@ -51,7 +57,7 @@ async function getInstance() {
   const userData = await response.json()
   const postsResponse = await fetch(postsUrl)
   const postsData = await postsResponse.json()
-  userInstance.fill({...userData, posts: postsData})
+  console.log(userInstance.fill({...userData, posts: postsData}))
   return userInstance
 }
 
