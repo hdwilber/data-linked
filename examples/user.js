@@ -9,8 +9,8 @@ const PostSpec = {
 const UserSpec = {
   id: MoreTypes.id,
   fullname: {
-	...Types.string,
-	_target: 'name',
+    ...Types.string,
+    _target: 'name',
   },
   email: Types.string,
   address: {
@@ -18,7 +18,8 @@ const UserSpec = {
     suite: Types.string,
     city: Types.string,
     zipcode: Types.string,
-    geo: {
+    location: {
+      _target: 'geo',
       lat: Types.string,
       lng: Types.string,
     },
@@ -33,7 +34,12 @@ const UserSpec = {
     catchPhrase: Types.string,
     bs: Types.string,
   },
-  posts: [PostSpec],
+  superPosts: [
+    {
+      ...PostSpec,
+      _target: 'posts',
+    }
+  ],
 }
 
 const userUrl = 'https://jsonplaceholder.typicode.com/users/1'
