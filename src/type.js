@@ -184,7 +184,7 @@ class TypeManager {
 
   restore() {
     if (this.rawData) {
-	  return this.fill(this.rawData)
+      return this.fill(this.rawData)
     }
     return this.clear()
   }
