@@ -35,7 +35,6 @@ class TypeManager {
     }
     if (keys.length > 0) {
       return keys.reduce((acc, key) => {
-
         const { spec: subSpec } = getSpecInfo(spec[key])
         const { _target } = subSpec
 
@@ -119,7 +118,7 @@ class TypeManager {
       if (isSync) {
         const resp = info.reduce(async (acc, i) => {
           const curr = await acc
-          
+
           if (!data.siblings) {
             data.siblings = []
           }
@@ -162,7 +161,7 @@ class TypeManager {
 
     const result = await saveKeys.reduce(async (acc, key) => {
       const current = await acc
-      current[key] = await this._runSave(spec[key], info[key], { parent: newData})
+      current[key] = await this._runSave(spec[key], info[key], { parent: newData })
       return current
     }, Promise.resolve({}))
 
@@ -179,15 +178,15 @@ class TypeManager {
   }
 
   fill(data) {
-	this.rawData = data
+    this.rawData = data
     return this._fill(this.specs, data)
   }
 
   restore() {
-	if (this.rawData) {
-	  return this.fill(this.rawData)
-	}
-	return this.clear()
+    if (this.rawData) {
+      return this.fill(this.rawData)
+    }
+    return this.clear()
   }
 
   runSave(info) {

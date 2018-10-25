@@ -5,10 +5,10 @@
   "main": "lib/index.js",
   "scripts": {
     "clean": "rimraf lib",
-    "lint": "eslint src",
+    "lint": "eslint src --fix",
     "build": "rollup -c",
     "prepare": "npm run build",
-    "precommit": "npm run lint",
+    "precommit": "npm run lint & npm run test",
     "test": "jest",
     "dev": "webpack-dev-server --config ./webpack/webpack.config.js --env.NODE_ENV=development --progress --open --mode=development"
   },
@@ -30,15 +30,39 @@
     "babel-jest": "*",
     "babel-loader": "^8.0.4",
     "copy-webpack-plugin": "^4.5.4",
+    "eslint": "^5.7.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-jest": "^21.26.1",
     "extract-text-webpack-plugin": "^3.0.2",
     "html-webpack-plugin": "^3.2.0",
+    "husky": "^1.1.2",
     "jest": "^23.6.0",
     "pug": "^2.0.3",
     "pug-loader": "^2.4.0",
     "regenerator-runtime": "^0.12.1",
+    "rollup": "^0.66.6",
+    "rollup-plugin-babel": "^4.0.3",
     "webpack": "^4.23.0",
     "webpack-cli": "^3.1.2",
     "webpack-dev-server": "^3.1.10",
     "webpack-notifier": "^1.7.0"
+  },
+  "jest": {
+    "collectCoverage": true,
+    "coverageThreshold": {
+      "global": {
+        "branches": 10,
+        "functions": 10,
+        "lines": 10,
+        "statements": -10
+      }
+    }
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run precommit",
+      "pre-push": "npm run test"
+    }
   }
 }
