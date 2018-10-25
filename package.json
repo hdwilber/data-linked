@@ -48,6 +48,9 @@
     "webpack-dev-server": "^3.1.10",
     "webpack-notifier": "^1.7.0"
   },
+  "dependencies": {
+    "lodash": "^4.17.11"
+  },
   "jest": {
     "collectCoverage": true,
     "coverageThreshold": {
