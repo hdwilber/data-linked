@@ -84,6 +84,6 @@ Then you can work with output data or the empty object if you want.
 Somethings to consider:
 - Do not forget that the an field spec that is intended to be an array, should have a type spec at first element.
 - You can nest / link anything together resulting a complex object.
-- `_default` and `_format` can be values or functions. If a function is declared, The data target will be the first parameter. Whatever it returns will be passed a data to the field.
-
+- `_default` and `_format` can be values or functions. If a function is declared, in `_format` The data target will be the first parameter. 
+  Whatever it returns, the data will be passed to the field.
 
