@@ -16,11 +16,13 @@ const opportunity = {
     ...MoreTypes.image,
     _save: {
       create: [
-        data => (parent, options) => ({
-          name: 'Create Logo in Opportunity',
-          request: Promise.resolve('Create Logo Request 1'),
-        }),
-        data => (parent, options) => ({
+        (data, current) => {
+          return (parent, options) => ({
+            name: 'Create Logo in Opportunity',
+            request: Promise.resolve('Create Logo Request 1'),
+          })
+        },
+        (data, current) => (parent, options) => ({
           name: 'create logo in oportunity 2',
           request: Promise.resolve('Create Logo Request 2'),
         }),
@@ -28,10 +30,13 @@ const opportunity = {
     },
   },
   _save: {
-    create: data => (parent, options) => ({
+    create: (data, current) => (parent, options) => ({
       name: 'Save Opportunity type',
       request: Promise.resolve('Opportunity Data'),
     }),
+  },
+  _findInArray: function (data, array) {
+    return array.find(d => d.id === data.id)
   },
 }
 
@@ -63,6 +68,11 @@ const institution = {
   logo: {
     ...MoreTypes.image,
     _save: {
+      checkBeforeCreate: function (newValues, current) {
+        console.log('Values : %o', newValues)
+        console.log('Current : %o', current)
+        return false
+      },
       isSync: true,
       create: [
         data => (data, ref) => {
@@ -112,12 +122,14 @@ const institution = {
       }),
     },
   }],
-  //opportunities: [opportunity],
+  opportunities: [opportunity],
   _save: {
-    create: data => (parent, options) => ({
-      name: 'Save Institution Data',
-      request: fetch('http://localhost:3100/api/institutions/5b1cc66ace94c9ae6aefaeb6'),
-    }),
+    create: (data, current) => {
+      return (parent, options) => ({
+        name: 'Save Institution Data',
+        request: fetch('http://localhost:3100/api/institutions/5b1cc66ace94c9ae6aefaeb6'),
+      })
+    },
     resultHandler: async (request) => {
       try {
         const response = await request
@@ -177,24 +189,25 @@ const defaultFilter = {
   ],
 }
 
-//const type2 = new TypeManager(institution)
-//console.log(type2.clear())
+const type2 = new TypeManager(institution)
+console.log(type2.clear())
 
-//const type = new TypeManager(institution)
-//fetch(`http://localhost:3100/api/institutions/5b1cc66ace94c9ae6aefaeb6/?filter=${JSON.stringify(defaultFilter)}`)
-//.then(res => res.json())
-//.then((data) => {
-  //delete data.id
-  //const build = type.fill(data)
-  //console.log(build)
-  //const saveInfo = type.save(build)
-  //console.log(saveInfo)
-  //type.runSave(saveInfo, null).then(d => console.log(d))
-//})
+const type = new TypeManager(institution)
+fetch(`http://localhost:3100/api/institutions/5b1cc66ace94c9ae6aefaeb6/?filter=${JSON.stringify(defaultFilter)}`)
+.then(res => res.json())
+.then((data) => {
+  delete data.id
+  const build = type.fill(data)
+  console.log(build)
+  const modified = Object.assign({}, build)
+  modified.name = 'Escuela superior de Ciencia y talento'
+  const saveInfo = type.save(modified, build)
+  console.log(saveInfo)
+  type.runSave(saveInfo, null).then(d => console.log(d))
+})
 
 let userInstance = null
 getUserInstance().then(user => {
   userInstance = user
-  console.log(userInstance.restore())
 })
 

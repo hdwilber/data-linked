@@ -1,4 +1,5 @@
-import { getSpecInfo, getSpecKeys } from './utils'
+import { checkWillSave, getSpecInfo, getSpecKeys } from './utils'
+import defaults from './defaults'
 
 class TypeManager {
   constructor(specs) {
@@ -55,10 +56,16 @@ class TypeManager {
     return data
   }
 
-  _save(rawSpec, data) {
+  _save(rawSpec, data, current) {
     const { isArray, spec, keys } = getSpecInfo(rawSpec)
     if (isArray) {
-      return Array.isArray(data) ? data.map(d => this._save(spec, d)) : []
+      const { _findInArray } = spec
+      return Array.isArray(data) ? data.map((d) => {
+        const currentEl = typeof _findInArray === 'function'
+          ? _findInArray(d, data)
+          : defaults.findInArray(d, data)
+        return this._save(spec, d, currentEl)
+      }) : []
     }
 
     if (keys.length > 0) {
@@ -67,7 +74,7 @@ class TypeManager {
         const { isArray: subIsArray, spec: subSpec } = getSpecInfo(spec[key])
         const { _save } = subSpec
 
-        const res = this._save(spec[key], data && data[key])
+        const res = this._save(spec[key], data && data[key], current && current[key])
 
         if (typeof res !== 'undefined') {
           if (typeof res !== 'function') {
@@ -93,11 +100,14 @@ class TypeManager {
       const { _save } = spec
       if (_save) {
         const { create } = _save
-        if (create) {
+
+        const willSave = checkWillSave(_save, values, current)
+        result._self = null
+        if (willSave && create) {
           if (Array.isArray(create)) {
-            result._self = create.map(cr => cr(values))
+            result._self = create.map(cr => cr(values, current))
           } else {
-            result._self = create(values)
+            result._self = create(values, current)
           }
         }
         return result
@@ -173,8 +183,8 @@ class TypeManager {
     return this._clear(this.specs)
   }
 
-  save(data) {
-    return this._save(this.specs, data)
+  save(data, current) {
+    return this._save(this.specs, data, current)
   }
 
   fill(data) {

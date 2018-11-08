@@ -1,4 +1,5 @@
 import _isEqual from 'lodash/isEqual'
+import _pick from 'lodash/pick'
 import Types from './basic'
 
 export function getSpecKeys(specs) {
@@ -46,4 +47,14 @@ export function getSpecInfo(rawSpec) {
     spec,
     keys: getSpecKeys(spec),
   }
+}
+
+export function checkWillSave(saveSpec, values, data) {
+  const { checkBeforeCreate } = saveSpec
+  const keys = Object.keys(values)
+  const current = _pick(data, keys)
+
+  return typeof checkBeforeCreate === 'function'
+    ? checkBeforeCreate(values, current, data)
+    : !_isEqual(values, current)
 }
