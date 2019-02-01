@@ -37,7 +37,7 @@ According to that specification, the input data can have any of these fields. If
 Let's suppose we have the next object as input data:
 ```
 const inputData = {
-  name: 'Wilber',
+  name: 'Somename',
   age: 30,
   postData: [
     {
@@ -73,7 +73,7 @@ const filledUserObject = userInstanceType.fill(inputData)
 And the output will be: 
 ```
 const output = {
-  name: 'Wilber',
+  name: Somename',
   birthYear: 1988,
   phones: [],
   posts: [{ text: 'bla bla', title: 'bla bla'}],

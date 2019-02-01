@@ -1,6 +1,7 @@
-import { TypeManager, Types, MoreTypes } from '../src';
 import getUserInstance from './user'
 
+// Other examples
+// sample institution spec
 const singleInstitution = {
   id: MoreTypes.id,
   prename: Types.string,
@@ -9,6 +10,9 @@ const singleInstitution = {
   phones: [Types.string],
 }
 
+// sample Opportunity spec with requests
+// Saving a logo with two Promises to resolve.
+// Create property in _save is an array.
 const opportunity = {
   id: MoreTypes.id,
   name: Types.string,
@@ -19,20 +23,21 @@ const opportunity = {
         (data, current) => {
           return (parent, options) => ({
             name: 'Create Logo in Opportunity',
-            request: Promise.resolve('Create Logo Request 1'),
+            request: Promise.resolve('Create Logo Request'),
           })
         },
         (data, current) => (parent, options) => ({
-          name: 'create logo in oportunity 2',
-          request: Promise.resolve('Create Logo Request 2'),
+          name: 'Create Logo in Opportunity #2',
+          request: Promise.resolve('Create Logo Request #2'),
         }),
       ],
     },
   },
+  // create property in _save is a function
   _save: {
     create: (data, current) => (parent, options) => ({
-      name: 'Save Opportunity type',
-      request: Promise.resolve('Opportunity Data'),
+      name: 'Single Saving Request',
+      request: Promise.resolve('Single Request'),
     }),
   },
   _findInArray: function (data, array) {
@@ -40,96 +45,55 @@ const opportunity = {
   },
 }
 
-function getTimer(time) {
-  return new Promise((resolve, reject) => {
-    fetch('http://localhost:3100/api/institutions/5b1cc66ace94c9ae6aefaeb6')
-    .then(s => {
-      console.log('starting time for: %o', time)
-      setTimeout( () => {
-        console.log('complete %o', time)
-        resolve(`Time: ${time}`)
-      }, time)
-    })
-  })
-}
-
+// Reusing institution spec defined before
 const institution = {
   ...singleInstitution,
-  //head: {
-    //_format: data => ({
-      //value: data.id,
-      //text: data.name,
-    //}),
-    //_save: {
-      //as: 'parentId',
-      //format: data => data.value,
-    //},
-  //},
   logo: {
     ...MoreTypes.image,
     _save: {
+      // Before to start to create the save instance, there an option to continue
       checkBeforeCreate: function (newValues, current) {
-        console.log('Values : %o', newValues)
-        console.log('Current : %o', current)
+        // On false, saving process is stopped
         return false
       },
+      // If synchronized. requests are executed one by one according to create array. Otherwise, all are executed at same time
       isSync: true,
       create: [
         data => (data, ref) => {
-          console.log('----1-')
-          console.log(data)
           return {
-            name: 'Create Logo in Institution',
+            name: 'First request to execute',
             request: getTimer(2000),
           }
         },
         data => (data, ref) => {
-          console.log('----2-')
-          console.log(data)
           return {
-            name: 'Create Logo in Institution - re-query',
+            name: 'Second request to execute',
             request: getTimer(2000),
           }
         },
       ],
     },
   },
-  //simpleHead: {
-    //_save: {
-      //as: 'minimal-head',
-    //},
-    //_target: 'head',
-    //_format: data => ({
-      //value: data.id,
-      //text: data.name,
-    //}),
-  //},
-  //location: {
-    //point: {
-      //lat: Types.number,
-      //lng: Types.number,
-    //},
-    //zoom: {
-      //_default: 10,
-    //},
-  //},
+  // array of institutions
   dependencies: [{
     ...singleInstitution,
     _save: {
       create: data => parent => ({
-        name: 'Save Dependency',
+        name: 'Save as a dependency',
         request: Promise.resolve(data),
       }),
     },
   }],
+  // array of opportunities defined before
   opportunities: [opportunity],
   _save: {
     create: (data, current) => {
       return (parent, options) => ({
-        name: 'Save Institution Data',
-        request: fetch('http://localhost:3100/api/institutions/5b1cc66ace94c9ae6aefaeb6'),
+        name: 'Request',
+        request: Promise.resolve('Data is going to be saved')
       })
     },
+    // It is possible to parse the request result
     resultHandler: async (request) => {
       try {
         const response = await request
@@ -140,7 +104,7 @@ const institution = {
           }
         }
         return {
-          error: 'something went wrong, reponse not ok',
+          error: 'Something went wrong, reponse not ok',
         }
       } catch (error) {
         return {
@@ -151,63 +115,15 @@ const institution = {
   },
 }
 
-const defaultFilter = {
-  where: {
-    adminLevel: 'main',
-  },
-  include: [
-    { relation: 'head' },
-    {
-      relation: 'account',
-    },
-    {
-      relation: 'logo',
-    },
-    {
-      relation: 'opportunities',
-      scope: {
-        include: ['logo', 'account'],
-      },
-    },
-    {
-      relation: 'dependencies',
-      scope: {
-        include: [
-          {
-            relation: 'dependencies',
-            scope: {
-              include: [
-                { relation: 'dependencies' },
-                { relation: 'opportunities' },
-              ],
-            },
-          },
-          { relation: 'opportunities' },
-        ],
-      },
-    },
-  ],
-}
+// You can use the simplest specification for institution
+const simplestInstitutionType = new TypeManager(singleInstitution)
+// You can use it with all complete Institution specification
+const institutionType = new TypeManager(institution)
+// You can use only parts of it. For example. only logo
 
-const type2 = new TypeManager(institution)
-console.log(type2.clear())
-
-const type = new TypeManager(institution)
-fetch(`http://localhost:3100/api/institutions/5b1cc66ace94c9ae6aefaeb6/?filter=${JSON.stringify(defaultFilter)}`)
-.then(res => res.json())
-.then((data) => {
-  delete data.id
-  const build = type.fill(data)
-  console.log(build)
-  const modified = Object.assign({}, build)
-  modified.name = 'Escuela superior de Ciencia y talento'
-  const saveInfo = type.save(modified, build)
-  console.log(saveInfo)
-  type.runSave(saveInfo, null).then(d => console.log(d))
-})
-
-let userInstance = null
+// Testing the user example
 getUserInstance().then(user => {
-  userInstance = user
+  // user the formatted one:
+  const formattedUser = user
 })
 

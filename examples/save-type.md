@@ -88,7 +88,7 @@ User will have:
 So, the output data at the top level of user object will be:
 ```
 const outputData = {
-  name: 'Wilber',
+  name: 'Somename',
   'some-year': 30,
   'phones': [],
 }
