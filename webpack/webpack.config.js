@@ -127,7 +127,7 @@ module.exports = env => {
         inject: true
       }),
       new WebpackNotifierPlugin({
-        title: 'Rest linked'
+        title: 'Data linked'
       })
     ]
   }

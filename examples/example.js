@@ -1,3 +1,4 @@
+import { TypeManager, Types, MoreTypes } from '../src';
 import getUserInstance from './user'
 
 // Other examples

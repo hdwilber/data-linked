@@ -1,7 +1,7 @@
 {
-  "name": "rest-linked",
+  "name": "data-linked",
   "version": "0.0.1",
-  "description": "Really small library to handle objects and connect to restful APIs",
+  "description": "Really small library to handle objects, clear, format, and even save your data",
   "main": "lib/index.js",
   "scripts": {
     "clean": "rimraf lib",
