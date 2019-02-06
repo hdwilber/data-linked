@@ -21,6 +21,7 @@ module.exports = env => {
       publicPath: NODE_ENV === 'prod' ? '': '/',
       filename: 'assets/js/[name].[hash:7].bundle.js'
     },
+    devtool: 'eval',
     devServer: {
       contentBase: path.resolve(__dirname, '../examples'),
       publicPath: '/',
@@ -32,7 +33,6 @@ module.exports = env => {
         images: path.resolve(__dirname, '../examples/assets/images'), // Relative path of images
       }
     },
-
     /*
       Loaders with their configurations
     */

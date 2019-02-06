@@ -1,14 +1,16 @@
 import { checkWillSave, getSpecInfo, getSpecKeys } from './utils'
 import defaults from './defaults'
 
+// data: the actual modified data
+// current: the original not-modified data
 export function save(rawSpec, data, current) {
   const { isArray, spec, keys } = getSpecInfo(rawSpec)
   if (isArray) {
     const { _findInArray } = spec
     return Array.isArray(data) ? data.map((d) => {
       const currentEl = typeof _findInArray === 'function'
-        ? _findInArray(d, data)
-        : defaults.findInArray(d, data)
+        ? _findInArray(d, current)
+        : defaults.findInArray(d, current)
       return save(spec, d, currentEl)
     }) : []
   }
@@ -20,28 +22,28 @@ export function save(rawSpec, data, current) {
       const { _save } = subSpec
 
       const res = save(spec[key], data && data[key], current && current[key])
-
       if (typeof res !== 'undefined') {
-        if (typeof res !== 'function') {
-          if (_save) {
-            const { as, create } = _save
-            if (subIsArray && create) {
-              acc[key] = res
-            } else if (Array.isArray(create)) {
-              acc[key] = res
+        if (res) {
+          if (typeof res._self !== 'function') {
+            if (_save) {
+              const { as, create } = _save
+              if (subIsArray && create) {
+                acc[key] = res
+              } else if (Array.isArray(create)) {
+                acc[key] = res
+              } else {
+                values[as || key] = res
+              }
             } else {
-              values[as || key] = res
+              values[key] = res
             }
           } else {
-            values[key] = res
+            acc[key] = res
           }
-        } else {
-          acc[key] = res
         }
       }
       return acc
     }, {})
-
     const { _save } = spec
     if (_save) {
       const { create } = _save
@@ -61,8 +63,20 @@ export function save(rawSpec, data, current) {
   }
   const { _save } = spec
   if (_save) {
-    const { format } = _save
-    return format ? format(data) : data
+    const { format, create } = _save
+    const dataTarget = format ? format(data) : data
+    const willSave = checkWillSave(_save, dataTarget, current)
+    const result = {}
+
+    result._self = null
+    if (willSave && create) {
+      if (Array.isArray(create)) {
+        result._self = create.map(cr => cr(dataTarget, current))
+      } else {
+        result._self = create(dataTarget, current)
+      }
+    }
+    return result
   }
   return data
 }
@@ -119,7 +133,7 @@ export async function processSave(spec, info, data) {
   if (Array.isArray(info)) {
     const { _save: { isSync } } = spec
     if (isSync) {
-      const resp = info.reduce(async (acc, i) => {
+      const resp = info.reduce(async (acc, index) => {
         const curr = await acc
 
         if (!data.siblings) {
@@ -127,7 +141,7 @@ export async function processSave(spec, info, data) {
         }
         data.siblings = curr
 
-        const response = await processSave(spec, i, data)
+        const response = await processSave(spec, index, data)
         return curr.concat([{ response }])
       }, Promise.resolve([]))
       return resp
@@ -156,7 +170,7 @@ export async function runSave(rawSpec, info, data) {
 
   const selfResult = _self && await processSave(spec, _self, data)
   const newData = {
-    parent: data,
+    upLevel: data,
     ...selfResult,
   }
 
@@ -164,7 +178,7 @@ export async function runSave(rawSpec, info, data) {
 
   const result = await saveKeys.reduce(async (acc, key) => {
     const current = await acc
-    current[key] = await runSave(spec[key], info[key], { parent: newData })
+    current[key] = await runSave(spec[key], info[key], { upLevel: newData })
     return current
   }, Promise.resolve({}))
 
