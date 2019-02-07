@@ -13,5 +13,6 @@
     "no-underscore-dangle": ["off"],
     "semi": ["off"],
     "no-param-reassign": ["off"],
+    "no-lonely-if": ["off"],
   },
 }

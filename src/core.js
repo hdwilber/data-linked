@@ -32,7 +32,10 @@ export function save(rawSpec, data, current) {
               } else if (Array.isArray(create)) {
                 acc[key] = res
               } else {
-                values[as || key] = res
+                // Remove from self data when nested object is not going to save
+                if (Object.keys(res) > 1 && !res._self) {
+                  values[as || key] = res
+                }
               }
             } else {
               values[key] = res
