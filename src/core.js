@@ -40,7 +40,7 @@ export function save(rawSpec, data, current) {
               }
             } else {
               const { _shouldSave } = subSpec
-              const shouldSave = _shouldSave 
+              const shouldSave = _shouldSave
                 ? _shouldSave(res, current[key])
                 : !_isEqual(res, current[key])
               if (shouldSave) {
