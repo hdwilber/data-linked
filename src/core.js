@@ -1,3 +1,4 @@
+import _isEqual from 'lodash/isEqual'
 import { checkWillSave, getSpecInfo, getSpecKeys } from './utils'
 import defaults from './defaults'
 
@@ -38,7 +39,13 @@ export function save(rawSpec, data, current) {
                 }
               }
             } else {
-              values[key] = res
+              const { _shouldSave } = subSpec
+              const shouldSave = _shouldSave 
+                ? _shouldSave(res, current[key])
+                : !_isEqual(res, current[key])
+              if (shouldSave) {
+                values[key] = res
+              }
             }
           } else {
             acc[key] = res
@@ -132,7 +139,7 @@ export function clear(rawSpec) {
   return typeof _default === 'function' ? _default() : _default
 }
 
-export async function processSave(spec, info, data) {
+export async function processSave(spec, info, data, options) {
   if (Array.isArray(info)) {
     const { _save: { isSync } } = spec
     if (isSync) {
@@ -144,15 +151,15 @@ export async function processSave(spec, info, data) {
         }
         data.siblings = curr
 
-        const response = await processSave(spec, index, data)
+        const response = await processSave(spec, index, data, options)
         return curr.concat([{ response }])
       }, Promise.resolve([]))
       return resp
     }
-    const resp = Promise.all(info.map(i => processSave(spec, i, data)))
+    const resp = Promise.all(info.map(i => processSave(spec, i, data, options)))
     return resp
   }
-  const resInfo = info(data)
+  const resInfo = info(data, options)
   const { request } = resInfo
 
   const { resultHandler } = spec._save
@@ -161,17 +168,17 @@ export async function processSave(spec, info, data) {
   return selfResult
 }
 
-export async function runSave(rawSpec, info, data) {
+export async function runSave(rawSpec, info, data, options) {
   const { isArray, spec } = getSpecInfo(rawSpec)
 
   if (isArray) {
     return Array.isArray(info)
-      ? Promise.all(info.map(i => runSave(spec, i, data)))
+      ? Promise.all(info.map(i => runSave(spec, i, data, options)))
       : []
   }
   const { _self } = info
 
-  const selfResult = _self && await processSave(spec, _self, data)
+  const selfResult = _self && await processSave(spec, _self, data, options)
   const newData = {
     upLevel: data,
     ...selfResult,
@@ -181,7 +188,7 @@ export async function runSave(rawSpec, info, data) {
 
   const result = await saveKeys.reduce(async (acc, key) => {
     const current = await acc
-    current[key] = await runSave(spec[key], info[key], { upLevel: newData })
+    current[key] = await runSave(spec[key], info[key], { upLevel: newData }, options)
     return current
   }, Promise.resolve({}))
 

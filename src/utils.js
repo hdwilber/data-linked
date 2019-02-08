@@ -52,6 +52,9 @@ export function getSpecInfo(rawSpec) {
 // Currently this works only with objects.
 // Need to check for every value we have, string, numbers, nulls, undefineds
 export function checkWillSave(saveSpec, values, data) {
+  if (values === null && values === data) {
+    return false
+  }
   const { checkBeforeCreate } = saveSpec
   const keys = values ? Object.keys(values) : []
   const current = Array.isArray(keys) ? _pick(data, keys) : values

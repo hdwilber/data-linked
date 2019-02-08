@@ -27,8 +27,8 @@ class TypeManager {
     return core.clear()
   }
 
-  runSave(info) {
-    return core.runSave(this.specs, info, {})
+  runSave(info, data, options) {
+    return core.runSave(this.specs, info, data, options)
   }
 }
 
