@@ -57,7 +57,6 @@ export function checkWillSave(saveSpec, values, data) {
   }
   const { checkBeforeCreate } = saveSpec
   if (Array.isArray(values)) {
-
     console.log('EXRA')
     console.log(values)
     console.log(data)

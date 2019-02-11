@@ -33,10 +33,10 @@ export function save(rawSpec, data, current) {
               } else if (Array.isArray(create)) {
                 acc[key] = res
               } else {
-              if (key === 'categories') {
-                console.log('debug 2')
-                console.log(res)
-              }
+                if (key === 'categories') {
+                  console.log('debug 2')
+                  console.log(res)
+                }
                 // If result is a data by itself then, set as value result
                 if (Array.isArray(res)) {
                   values[as || key] = res
