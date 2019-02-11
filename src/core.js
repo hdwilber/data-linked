@@ -33,17 +33,29 @@ export function save(rawSpec, data, current) {
               } else if (Array.isArray(create)) {
                 acc[key] = res
               } else {
+              if (key === 'categories') {
+                console.log('debug 2')
+                console.log(res)
+              }
+                // If result is a data by itself then, set as value result
+                if (Array.isArray(res)) {
+                  values[as || key] = res
                 // Remove from self data when nested object is not going to save
-                if (Object.keys(res) > 1 && !res._self) {
+                // Except for the ones that have create function
+                } else if (!res._self && create) {
                   values[as || key] = res
                 }
               }
             } else {
-              const { _shouldSave } = subSpec
-              const shouldSave = _shouldSave
-                ? _shouldSave(res, current[key])
-                : !_isEqual(res, current[key])
-              if (shouldSave) {
+              const { _shouldSave, _primary } = subSpec
+              if (!_primary) {
+                const shouldSave = _shouldSave
+                  ? _shouldSave(res, current[key])
+                  : !_isEqual(res, current[key])
+                if (shouldSave) {
+                  values[key] = res
+                }
+              } else {
                 values[key] = res
               }
             }
@@ -74,16 +86,21 @@ export function save(rawSpec, data, current) {
   const { _save } = spec
   if (_save) {
     const { format, create } = _save
-    const dataTarget = format ? format(data) : data
-    const willSave = checkWillSave(_save, dataTarget, current)
-    const result = {}
+    const formattedData = format ? format(data) : data
+    const formattedCurrent = format ? format(current) : current
 
+    const willSave = checkWillSave(_save, formattedData, formattedCurrent)
+    const result = {}
     result._self = null
-    if (willSave && create) {
-      if (Array.isArray(create)) {
-        result._self = create.map(cr => cr(dataTarget, current))
+    if (willSave) {
+      if (create) {
+        if (Array.isArray(create)) {
+          result._self = create.map(cr => cr(formattedData, current))
+        } else {
+          result._self = create(formattedData, current)
+        }
       } else {
-        result._self = create(dataTarget, current)
+        return formattedData
       }
     }
     return result
@@ -181,14 +198,14 @@ export async function runSave(rawSpec, info, data, options) {
   const selfResult = _self && await processSave(spec, _self, data, options)
   const newData = {
     upLevel: data,
-    ...selfResult,
+    itself: selfResult,
   }
 
   const saveKeys = getSpecKeys(info)
 
   const result = await saveKeys.reduce(async (acc, key) => {
     const current = await acc
-    current[key] = await runSave(spec[key], info[key], { upLevel: newData }, options)
+    current[key] = await runSave(spec[key], info[key], newData, options)
     return current
   }, Promise.resolve({}))
 

@@ -56,10 +56,17 @@ export function checkWillSave(saveSpec, values, data) {
     return false
   }
   const { checkBeforeCreate } = saveSpec
+  if (Array.isArray(values)) {
+
+    console.log('EXRA')
+    console.log(values)
+    console.log(data)
+    return !_isEqual(values, data)
+  }
   const keys = values ? Object.keys(values) : []
   const current = Array.isArray(keys) ? _pick(data, keys) : values
 
   return typeof checkBeforeCreate === 'function'
     ? checkBeforeCreate(values, current, data)
-    : !_isEqual(values, current)
+    : !_isEqual(values, data)
 }

@@ -1,130 +1,125 @@
 import { TypeManager, Types, MoreTypes } from '../src';
 import getUserInstance from './user'
+import _isEqual from 'lodash/isEqual'
 
-// Other examples
-// sample institution spec
-const singleInstitution = {
-  id: MoreTypes.id,
-  prename: Types.string,
-  name: Types.string,
-  isValid: Types.bool,
-  phones: [Types.string],
+const idSpec = {
+  _default: () => (Math.random() * 40),
+  _primary: true,
 }
 
-// sample Opportunity spec with requests
-// Saving a logo with two Promises to resolve.
-// Create property in _save is an array.
-const opportunity = {
-  id: MoreTypes.id,
-  name: Types.string,
-  logo: {
-    ...MoreTypes.image,
-    _save: {
-      create: [
-        (data, current) => {
-          return (parent, options) => ({
-            name: 'Create Logo in Opportunity',
-            request: Promise.resolve('Create Logo Request'),
-          })
-        },
-        (data, current) => (parent, options) => ({
-          name: 'Create Logo in Opportunity #2',
-          request: Promise.resolve('Create Logo Request #2'),
-        }),
-      ],
-    },
+export const geoLocationSpec = {
+  _default: {
+    point: null,
+    zoom: 12
   },
-  // create property in _save is a function
-  _save: {
-    create: (data, current) => (parent, options) => ({
-      name: 'Single Saving Request',
-      request: Promise.resolve('Single Request'),
-    }),
-  },
-  _findInArray: function (data, array) {
-    return array.find(d => d.id === data.id)
-  },
+  _shouldSave: (value, data) => {
+    if (value === null && data === value) {
+      return false
+    }
+    return !_isEqual(value, data)
+  }
 }
 
-// Reusing institution spec defined before
-const institution = {
-  ...singleInstitution,
-  logo: {
-    ...MoreTypes.image,
+const baseInstitutionSpec = {
+  id: idSpec,
+  categories: {
+    _id: 'cat',
+    _default: [],
     _save: {
-      // Before to start to create the save instance, there an option to continue
-      checkBeforeCreate: function (newValues, current) {
-        // On false, saving process is stopped
-        return false
+      format: cats => {
+        if (cats) {
+          return cats.map(cat => cat.id)
+        }
+        return []
       },
-      // If synchronized. requests are executed one by one according to create array. Otherwise, all are executed at same time
-      isSync: true,
-      create: [
-        data => (data, ref) => {
-          return {
-            name: 'First request to execute',
-            request: getTimer(2000),
-          }
-        },
-        data => (data, ref) => {
-          return {
-            name: 'Second request to execute',
-            request: getTimer(2000),
-          }
-        },
-      ],
     },
   },
-  // array of institutions
-  dependencies: [{
-    ...singleInstitution,
+  logo: {
+    _id: 'logo',
+    _default: {
+      url: null,
+      file: null,
+      fakeUrl: null
+    },
     _save: {
-      create: data => parent => ({
-        name: 'Save as a dependency',
-        request: Promise.resolve(data),
-      }),
-    },
-  }],
-  // array of opportunities defined before
-  opportunities: [opportunity],
-  _save: {
-    create: (data, current) => {
-      return (parent, options) => ({
-        name: 'Request',
-        request: Promise.resolve('Data is going to be saved')
-      })
-    },
-    // It is possible to parse the request result
-    resultHandler: async (request) => {
-      try {
-        const response = await request
-        if (response.ok) {
-          const data = await response.json()
+      checkBeforeCreate: (values, current, data) => {
+        return !!values.file
+      },
+      create: (data, current) => {
+        return (upstreamData, options) => {
+          console.log('saving logo')
+          console.log('saving logo')
+          console.log('saving logo')
+          console.log('saving logo')
+          console.log('saving logo')
+          console.log(upstreamData)
           return {
-            result: data,
+            name: 'Saving one',
+            request: Promise.resolve(2)
           }
         }
+      },
+    },
+    _target: 'logoId',
+    _format: data => {
+      if (data) {
         return {
-          error: 'Something went wrong, reponse not ok',
+          url: buildImageUrl(data),
         }
-      } catch (error) {
-        return {
-          error,
-        }
+      }
+      return {
+        url: null,
+        file: null,
+        fakeUrl: null,
       }
     },
   },
+
+  geoLocation: geoLocationSpec,
+  _save: {
+    create: (data, current) => {
+      console.log('to save')
+      console.log(data)
+      return (parent, options) => {
+        return {
+          name: 'Saving institution',
+          request: Promise.resolve(data)
+        }
+      }
+    }
+  }
 }
 
-// You can use the simplest specification for institution
-const simplestInstitutionType = new TypeManager(singleInstitution)
-// You can use it with all complete Institution specification
-const institutionType = new TypeManager(institution)
-// You can use only parts of it. For example. only logo
+const iid = '6ec03386-3fb4-494d-be05-2cd7f286c559'
+const url = 'http://localhost:3100/api/institutions/' + iid
 
-// Testing the user example
-getUserInstance().then(user => {
-  // user the formatted one:
-  const formattedUser = user
+const InstitutionType = new TypeManager(baseInstitutionSpec)
+fetch(url).then(res => res.json())
+.then(({institution}) => {
+  console.log(institution)
+  const modified = InstitutionType.fill(institution)
+  const original = InstitutionType.fill(institution)
+  modified.categories  = [{id: 10,}, {id: 15}]
+  original.categories = [{id: 10,}, {id: 15}]
+  modified.geoLocation = {
+    point: null,
+    zoom: 50,
+  }
+  modified.logo = {
+    file: 'Some file',
+  }
+
+
+
+  console.log(original)
+  console.log(modified)
+
+  const saveInfo = InstitutionType.save(modified, original)
+  console.log('SAVE INFO')
+  console.log(saveInfo)
+
+  InstitutionType.runSave(saveInfo, original).then(result => {
+    console.log(result)
+  })
 })
 
