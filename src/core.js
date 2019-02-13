@@ -26,37 +26,39 @@ export function save(rawSpec, data, current) {
       if (typeof res !== 'undefined') {
         if (res) {
           if (typeof res._self !== 'function') {
-            if (_save) {
-              const { as, create } = _save
-              if (subIsArray && create) {
-                acc[key] = res
-              } else if (Array.isArray(create)) {
-                acc[key] = res
+            if (res.self) {
+              if (_save) {
+                const { as, create } = _save
+                if (subIsArray && create) {
+                  acc[key] = res
+                } else if (Array.isArray(create)) {
+                  acc[key] = res
+                } else {
+                  if (key === 'categories') {
+                    console.log('debug 2')
+                    console.log(res)
+                  }
+                  // If result is a data by itself then, set as value result
+                  if (Array.isArray(res)) {
+                    values[as || key] = res
+                  // Remove from self data when nested object is not going to save
+                  // Except for the ones that have create function
+                  } else if (!res._self && create) {
+                    values[as || key] = res
+                  }
+                }
               } else {
-                if (key === 'categories') {
-                  console.log('debug 2')
-                  console.log(res)
-                }
-                // If result is a data by itself then, set as value result
-                if (Array.isArray(res)) {
-                  values[as || key] = res
-                // Remove from self data when nested object is not going to save
-                // Except for the ones that have create function
-                } else if (!res._self && create) {
-                  values[as || key] = res
-                }
-              }
-            } else {
-              const { _shouldSave, _primary } = subSpec
-              if (!_primary) {
-                const shouldSave = _shouldSave
-                  ? _shouldSave(res, current[key])
-                  : !_isEqual(res, current[key])
-                if (shouldSave) {
+                const { _shouldSave, _primary } = subSpec
+                if (!_primary) {
+                  const shouldSave = _shouldSave
+                    ? _shouldSave(res, current[key])
+                    : !_isEqual(res, current[key])
+                  if (shouldSave) {
+                    values[key] = res
+                  }
+                } else {
                   values[key] = res
                 }
-              } else {
-                values[key] = res
               }
             }
           } else {
@@ -198,7 +200,7 @@ export async function runSave(rawSpec, info, data, options) {
   const selfResult = _self && await processSave(spec, _self, data, options)
   const newData = {
     upLevel: data,
-    itself: selfResult,
+    _self: selfResult,
   }
 
   const saveKeys = getSpecKeys(info)
