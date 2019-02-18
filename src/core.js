@@ -23,10 +23,12 @@ export function save(rawSpec, data, current) {
       const { _save } = subSpec
 
       const res = save(spec[key], data && data[key], current && current[key])
+
+
       if (typeof res !== 'undefined') {
         if (res) {
           if (typeof res._self !== 'function') {
-            if (res.self) {
+            if (res._self) {
               if (_save) {
                 const { as, create } = _save
                 if (subIsArray && create) {
@@ -34,10 +36,6 @@ export function save(rawSpec, data, current) {
                 } else if (Array.isArray(create)) {
                   acc[key] = res
                 } else {
-                  if (key === 'categories') {
-                    console.log('debug 2')
-                    console.log(res)
-                  }
                   // If result is a data by itself then, set as value result
                   if (Array.isArray(res)) {
                     values[as || key] = res
@@ -55,6 +53,25 @@ export function save(rawSpec, data, current) {
                     : !_isEqual(res, current[key])
                   if (shouldSave) {
                     values[key] = res
+                  }
+                } else {
+                  values[key] = res
+                }
+              }
+            } else {
+              const as = _save && _save.as
+
+              if (!Array.isArray(res)) {
+                if (typeof res._self === 'undefined') {
+                  if (!_isEqual(res, current[key])) {
+                    values[as || key] = res
+                  }
+                }
+              } else {
+                if (subIsArray) {
+                  const { create } = subSpec
+                  if (create) {
+                    acc[key] = res
                   }
                 } else {
                   values[key] = res
