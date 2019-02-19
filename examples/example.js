@@ -1,140 +1,50 @@
 import { TypeManager, Types, MoreTypes } from '../src';
 import getUserInstance from './user'
 import _isEqual from 'lodash/isEqual'
-
-const idSpec = {
-  _default: () => (Math.random() * 40),
-  _primary: true,
-}
-
-export const geoLocationSpec = {
-  _default: {
-    point: null,
-    zoom: 12
-  },
-  _shouldSave: (value, data) => {
-    if (value === null && data === value) {
-      return false
-    }
-    return !_isEqual(value, data)
-  }
-}
-
-const baseInstitutionSpec = {
-  academicLevels: [Types.string],
-
-  //id: idSpec,
-  //categories: {
-    //_id: 'catcat',
-    //_default: [],
-    //_save: {
-      //format: cats => {
-        //if (cats) {
-          //return cats.map(cat => cat.id)
-        //}
-        //return []
-      //},
-    //},
-  //},
-  //head: {
-    //_name:'HEAD',
-    //_default: null,
-    //_save: {
-      //as: 'headId',
-      //format: (parent) => {
-        //if(parent) {
-          //return parent.id
-        //}
-        //return null
-      //},
-    //},
-  //},
-
-  //logo: {
-    //_id: 'logo',
-    //_default: {
-      //url: null,
-      //file: null,
-      //fakeUrl: null
-    //},
-    //_save: {
-      //checkBeforeCreate: (values, current, data) => {
-          //return false
-      //},
-      //create: (data, current) => {
-        //return (upstreamData, options) => {
-          //console.log('saving logo')
-          //console.log('saving logo')
-          //console.log('saving logo')
-          //console.log('saving logo')
-          //console.log('saving logo')
-          //console.log(upstreamData)
-          //return {
-            //name: 'Saving one',
-            //request: Promise.resolve(2)
-          //}
-        //}
-      //},
-    //},
-    //_target: 'logoId',
-    //_format: data => {
-      //if (data) {
-        //return {
-          //url: buildImageUrl(data),
-        //}
-      //}
-      //return {
-        //url: null,
-        //file: null,
-        //fakeUrl: null,
-      //}
-    //},
-  //},
-
-  //geoLocation: geoLocationSpec,
-  _save: {
-    create: (data, current) => {
-      console.log('to save')
-      console.log('to save')
-      console.log('to save')
-      console.log(data)
-      //console.log(current);
-
-      return (parent, options) => {
-        return {
-          name: 'Saving institution',
-          request: Promise.resolve(data)
-        }
-      }
-    }
-  }
-}
+import institution from './data.json'
+import baseInstitutionSpec from './institution-spec'
+import { createSavingInformation } from '../src/save'
 
 const InstitutionSpec = {
   ...baseInstitutionSpec,
-  //dependencies: [baseInstitutionSpec],
+  dependencies: [{
+    ...baseInstitutionSpec,
+    _name: 'dependencies',
+  }],
 }
 
-
-const iid = '9a144bcf-7e0f-453f-92c3-ee9c14f671a8'
-const url = 'http://localhost:3100/api/institutions/' + iid
-
 const InstitutionType = new TypeManager(InstitutionSpec)
-fetch(url).then(res => res.json())
-.then(({institution}) => {
-  //institution.dependencies = institution.dependencies.slice(0,2)
-  const modified = InstitutionType.fill(institution)
-  const original = InstitutionType.fill(institution)
 
-  console.log(original)
-  console.log(modified)
+//console.log(institution);
+institution.dependencies = institution.dependencies.slice(0,1)
+const modified = InstitutionType.fill(institution)
+const original = InstitutionType.fill(institution)
 
-  const saveInfo = InstitutionType.save(modified, original)
-  console.log('SAVE INFO')
-  console.log(saveInfo)
+console.log(original)
+console.log(modified)
+console.log('---------');
 
-  InstitutionType.runSave(saveInfo, original).then(result => {
-    console.log(result)
-  })
+modified.name = 'new id'
+//modified.phones = [1,23,44, '444444']
+//modified.academicLevels = ['asdf', 'asdf2',]
+//modified.logo.file = 'extra data'
+//modified.categories = [{ id: '1' }, { id: '2', }]
+//modified.head = { id: 'head1', }
+//modified.geoLocation = {
+  //point: null,
+  //zoom: 12,
+//}
+//modified.dependencies[0].geoLocation = {
+  //point: 'amigstasd',
+  //zoom: 1000,
+//}
+
+//original.academicLevels = ['asdf', 'asdf2',]
+
+const saveInfo = createSavingInformation(InstitutionSpec, modified, original)
+console.log('SAVE INFO')
+console.log(saveInfo)
+
+InstitutionType.runSave(saveInfo, original).then(result => {
+  console.log(result)
 })
-

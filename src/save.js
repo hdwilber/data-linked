@@ -2,66 +2,107 @@ import _isEqual from 'lodash/isEqual'
 import { checkWillSave, getSpecInfo, getSpecKeys } from './utils'
 import defaults from './defaults'
 
+
+// @param fields: Stores the savables
+// @param values: Stores the values fields
+function storeSubField(key, rawSpec, accumulator, result, data, current) {
+  const { values, fields } = accumulator
+  // do nothing if undefined
+  if (typeof result === 'undefined') {
+    return accumulator
+  }
+
+  const { isArray, spec, keys } = getSpecInfo(rawSpec)
+  const { _save } = spec
+
+  if(isArray && _save) {
+    fields[key] = result
+  }
+  else if (result && result._self) {
+    fields[key] = result
+  } else {
+    if (result._self !== null) {
+      const as = _save && _save.as
+      values[as || key] = result
+    }
+  }
+
+  return {
+    values,
+    fields,
+  }
+}
+
+function storeArray(acc, rawSpec, result, data, current) {
+  const { isArray, spec, keys } = getSpecInfo(rawSpec)
+  if (result && result._self) {
+    acc.push(result)
+  }
+  return acc
+}
+
 // RawSpec
 // data: the actual modified data
 // current: the original not-modified data
 export function createSavingInformation(rawSpec, data, current) {
   const { isArray, spec, keys } = getSpecInfo(rawSpec)
   if (isArray) {
-    const { _findInArray } = spec
-    return Array.isArray(data) ? data.map((d) => {
-      const currentEl = typeof _findInArray === 'function'
-        ? _findInArray(d, current)
-        : defaults.findInArray(d, current)
-      return save(spec, d, currentEl)
-    }) : []
+    if (spec._save) {
+      const { _findInArray } = spec
+      return Array.isArray(data) ? data.reduce((acc, d) => {
+        const currentEl = typeof _findInArray === 'function'
+          ? _findInArray(d, current)
+          : defaults.findInArray(d, current)
+        const res = createSavingInformation(spec, d, currentEl)
+        return storeArray(acc, spec, res, d, currentEl)
+      }, []) : []
+    } else {
+      return !_isEqual(data, current) ? data: undefined
+    }
+  }
+  if (spec._name === 'dependencies') {
+    console.log('data');
+    console.log(spec);
+    console.log(keys);
   }
 
   if (keys.length > 0) {
     // Results for current instance for self data
-    const values = {}
+    //const { values, result } = {}
     // Results for current instances inside instance
-    const result = keys.reduce((acc, key) => {
-      const { isArray: subIsArray, spec: subSpec } = getSpecInfo(spec[key])
-      const { _save } = subSpec
-
-      const res = save(spec[key], data && data[key], current && current[key])
-
-      // do nothing if undefined
-      if (typeof res === 'undefined') return acc
-
-      const { as, create } = _save
-      if (res) {
-        if (!res._self) {
-
-          values[as || key] = res
-        } else {
-          acc[key] = res
-        }
+    const extracted = keys.reduce((acc, key) => {
+      const subData = data && data[key]
+      const subCurrent = current && current[key]
+      const subRawSpec = spec[key]
+      const res = createSavingInformation(spec[key], subData, subCurrent)
+      if (key === 'dependencies') {
+        console.log('la put amare');
+        console.log(res);
       }
-      return acc
-    })
+      return storeSubField(key, subRawSpec, 
+        acc,
+        res,
+        subData, subCurrent
+      )
+    }, { values: {}, fields: {} })
+    const { values, fields } = extracted
 
     const { _save } = spec
     if (_save) {
       const { create } = _save
       const willSave = checkWillSave(_save, values, current)
-      console.log('la puta madre');
-      console.log(spec)
-      console.log(result);
-      result._self = null
+      fields._self = null
       if (willSave && create) {
         if (Array.isArray(create)) {
-          result._self = create.map(cr => cr(values, current))
+          fields._self = create.map(cr => cr(values, current))
         } else {
-          result._self = create(values, current)
+          fields._self = create(values, current)
         }
       }
-      return result
+      return fields
     }
     return values
   }
-
   const { _save } = spec
   if (_save) {
     const { format, create } = _save
@@ -84,5 +125,6 @@ export function createSavingInformation(rawSpec, data, current) {
     }
     return result
   }
-  return data
+
+  return !_isEqual(data, current) ? data: undefined
 }
