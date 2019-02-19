@@ -150,14 +150,15 @@ export function fill(rawSpec, data, onlyExistentFields) {
   if (keys.length > 0) {
     return keys.reduce((acc, key) => {
 
-      if (onlyExistentFields) {
-        if(typeof data[key] === 'undefined') {
-          return acc
-        }
-      }
 
       const { spec: subSpec } = getSpecInfo(spec[key])
       const { _target } = subSpec
+
+      if (onlyExistentFields) {
+        if(typeof data[_target || key] === 'undefined') {
+          return acc
+        }
+      }
 
       const res = fill(spec[key], data && data[_target || key])
       if (typeof res !== 'undefined') {
