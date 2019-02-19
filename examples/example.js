@@ -21,6 +21,8 @@ export const geoLocationSpec = {
 }
 
 const baseInstitutionSpec = {
+  academicLevels: [Types.string],
+
   //id: idSpec,
   //categories: {
     //_id: 'catcat',
@@ -93,8 +95,11 @@ const baseInstitutionSpec = {
   _save: {
     create: (data, current) => {
       console.log('to save')
+      console.log('to save')
+      console.log('to save')
       console.log(data)
-      console.log(current);
+      //console.log(current);
+
       return (parent, options) => {
         return {
           name: 'Saving institution',
@@ -107,35 +112,19 @@ const baseInstitutionSpec = {
 
 const InstitutionSpec = {
   ...baseInstitutionSpec,
-  dependencies: [baseInstitutionSpec],
+  //dependencies: [baseInstitutionSpec],
 }
 
 
-const iid = 'ecc4453f-6d35-4639-8b8d-64801965e39d'
+const iid = '9a144bcf-7e0f-453f-92c3-ee9c14f671a8'
 const url = 'http://localhost:3100/api/institutions/' + iid
 
 const InstitutionType = new TypeManager(InstitutionSpec)
 fetch(url).then(res => res.json())
 .then(({institution}) => {
-  institution.dependencies = institution.dependencies.slice(0,2)
+  //institution.dependencies = institution.dependencies.slice(0,2)
   const modified = InstitutionType.fill(institution)
   const original = InstitutionType.fill(institution)
-
-  //modified.dependencies[0].name = 'first name'
-  //modified.dependencies[0].prename = 'my prename'
-
-
-  //modified.categories  = [{id: 10,}, {id: 15}]
-  //original.categories = [{id: 10,}, {id: 25}]
-  //modified.geoLocation = {
-    //point: null,
-    //zoom: 50,
-  //}
-  //modified.logo = {
-    //file: 'Some file',
-  //}
-
-
 
   console.log(original)
   console.log(modified)

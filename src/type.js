@@ -1,5 +1,6 @@
 import { getSpecKeys } from './utils'
 import * as core from './core'
+import { createSavingInformation } from './save'
 
 class TypeManager {
   constructor(specs) {
@@ -12,7 +13,7 @@ class TypeManager {
   }
 
   save(data, current) {
-    return core.save(this.specs, data, current)
+    return createSavingInformation(this.specs, data, current)
   }
 
   fill(data) {

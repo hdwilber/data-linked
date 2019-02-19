@@ -24,10 +24,10 @@ export function save(rawSpec, data, current) {
 
       const res = save(spec[key], data && data[key], current && current[key])
 
-
       if (typeof res !== 'undefined') {
         if (res) {
           if (typeof res._self !== 'function') {
+
             if (res._self) {
               if (_save) {
                 const { as, create } = _save
@@ -68,10 +68,21 @@ export function save(rawSpec, data, current) {
                   }
                 }
               } else {
+
                 if (subIsArray) {
                   const { create } = subSpec
                   if (create) {
                     acc[key] = res
+                  } else {
+                    if (typeof res._self === 'undefined') {
+                      if (!_isEqual(res, current[key])) {
+                        values[as || key] = res
+                      }
+                    }
+                    //if (key === 'academicLevels') {
+                      //console.log('debug 2')
+                      //console.log(res)
+                    //}
                   }
                 } else {
                   values[key] = res
@@ -127,8 +138,9 @@ export function save(rawSpec, data, current) {
   return data
 }
 
-export function fill(rawSpec, data) {
+export function fill(rawSpec, data, onlyExistentFields) {
   const { isArray, spec, keys } = getSpecInfo(rawSpec)
+
   if (isArray) {
     if (Array.isArray(data)) {
       return data.map(d => fill(spec, d))
@@ -137,6 +149,13 @@ export function fill(rawSpec, data) {
   }
   if (keys.length > 0) {
     return keys.reduce((acc, key) => {
+
+      if (onlyExistentFields) {
+        if(typeof data[key] === 'undefined') {
+          return acc
+        }
+      }
+
       const { spec: subSpec } = getSpecInfo(spec[key])
       const { _target } = subSpec
 
