@@ -17,16 +17,18 @@ function storeSubField(key, rawSpec, accumulator, result, data, current) {
 
   if(isArray && _save) {
     fields[key] = result
-  }
-  else if (result && result._self) {
-    fields[key] = result
   } else {
-    if (result._self !== null) {
-      const as = _save && _save.as
+    const as = _save && _save.as
+    if(result) {
+      if (result._self) {
+        fields[key] = result
+      } else if (result._self !== null){
+        values[as || key] = result
+      }
+    } else if(result === null) {
       values[as || key] = result
     }
   }
-
   return {
     values,
     fields,
