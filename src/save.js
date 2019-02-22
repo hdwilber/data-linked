@@ -62,11 +62,11 @@ export function createSavingInformation(rawSpec, data, current) {
       return !_isEqual(data, current) ? data: undefined
     }
   }
-  if (spec._name === 'dependencies') {
-    console.log('data');
-    console.log(spec);
-    console.log(keys);
-  }
+  //if (spec._name === 'dependencies') {
+    //console.log('data');
+    //console.log(spec);
+    //console.log(keys);
+  //}
 
   if (keys.length > 0) {
     // Results for current instance for self data
@@ -77,10 +77,10 @@ export function createSavingInformation(rawSpec, data, current) {
       const subCurrent = current && current[key]
       const subRawSpec = spec[key]
       const res = createSavingInformation(spec[key], subData, subCurrent)
-      if (key === 'dependencies') {
-        console.log('la put amare');
-        console.log(res);
-      }
+      //if (key === 'dependencies') {
+        //console.log('la put amare');
+        //console.log(res);
+      //}
       return storeSubField(key, subRawSpec, 
         acc,
         res,

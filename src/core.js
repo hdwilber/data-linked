@@ -196,6 +196,7 @@ export function clear(rawSpec) {
 }
 
 export async function processSave(spec, info, data, options) {
+  console.log('entering process save');
   if (Array.isArray(info)) {
     const { _save: { isSync } } = spec
     if (isSync) {
@@ -215,13 +216,30 @@ export async function processSave(spec, info, data, options) {
     const resp = Promise.all(info.map(i => processSave(spec, i, data, options)))
     return resp
   }
+
   const resInfo = info(data, options)
-  const { request } = resInfo
+  const { name, request, format, onSuccess, onFailure, options: infoOptions } = resInfo
 
   const { resultHandler } = spec._save
-  const selfResult = await (resultHandler ? resultHandler(request) : request)
+  //const selfResult = await (resultHandler ? resultHandler(request) : request)
+  try {
+    const jsonData = await request
+    const selfResult = await (jsonData.json())
+    const result = format ? format(selfResult): data
+    if (onSuccess) {
+      onSuccess(result, infoOptions)
+    }
+    console.log('Correctly saved');
+    return result
 
-  return selfResult
+  } catch(error) {
+    console.log('error: saving');
+    console.log(error);
+    if (onFailure) {
+      onFailure(error, infoOptions) 
+    }
+    return { error }
+  }
 }
 
 export async function runSave(rawSpec, info, data, options) {
@@ -235,10 +253,14 @@ export async function runSave(rawSpec, info, data, options) {
   const { _self } = info
 
   const selfResult = _self && await processSave(spec, _self, data, options)
+  console.log('----');
+  console.log(selfResult);
   const newData = {
     upLevel: data,
     _self: selfResult,
   }
+  console.log('RUN SAVE');
+  console.log(newData);
 
   const saveKeys = getSpecKeys(info)
 
