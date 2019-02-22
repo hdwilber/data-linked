@@ -216,20 +216,18 @@ export async function processSave(spec, info, data, options) {
     const resp = Promise.all(info.map(i => processSave(spec, i, data, options)))
     return resp
   }
-
-  const resInfo = info(data, options)
-  const { name, request, format, onSuccess, onFailure, options: infoOptions } = resInfo
-
-  const { resultHandler } = spec._save
-  //const selfResult = await (resultHandler ? resultHandler(request) : request)
   try {
+    const resInfo = info(data, options)
+    const { name, request, format, onSuccess, onFailure, options: infoOptions } = resInfo
+
+    const { resultHandler } = spec._save
+  //const selfResult = await (resultHandler ? resultHandler(request) : request)
     const jsonData = await request
     const selfResult = await (jsonData.json())
     const result = format ? format(selfResult): data
     if (onSuccess) {
       onSuccess(result, infoOptions)
     }
-    console.log('Correctly saved');
     return result
 
   } catch(error) {
@@ -253,15 +251,10 @@ export async function runSave(rawSpec, info, data, options) {
   const { _self } = info
 
   const selfResult = _self && await processSave(spec, _self, data, options)
-  console.log('----');
-  console.log(selfResult);
   const newData = {
     upLevel: data,
     _self: selfResult,
   }
-  console.log('RUN SAVE');
-  console.log(newData);
-
   const saveKeys = getSpecKeys(info)
 
   const result = await saveKeys.reduce(async (acc, key) => {
