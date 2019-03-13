@@ -15,17 +15,17 @@ function storeSubField(key, rawSpec, accumulator, result, data, current) {
   const { isArray, spec, keys } = getSpecInfo(rawSpec)
   const { _save } = spec
 
-  if(isArray && _save) {
+  if (isArray && _save) {
     fields[key] = result
   } else {
     const as = _save && _save.as
-    if(result) {
+    if (result) {
       if (result._self) {
         fields[key] = result
-      } else if (result._self !== null){
+      } else if (result._self !== null) {
         values[as || key] = result
       }
-    } else if(result === null) {
+    } else if (result === null) {
       values[as || key] = result
     }
   }
@@ -58,34 +58,23 @@ export function createSavingInformation(rawSpec, data, current) {
         const res = createSavingInformation(spec, d, currentEl)
         return storeArray(acc, spec, res, d, currentEl)
       }, []) : []
-    } else {
-      return !_isEqual(data, current) ? data: undefined
     }
+    return !_isEqual(data, current) ? data : undefined
   }
-  //if (spec._name === 'dependencies') {
-    //console.log('data');
-    //console.log(spec);
-    //console.log(keys);
-  //}
 
   if (keys.length > 0) {
     // Results for current instance for self data
-    //const { values, result } = {}
+    // const { values, result } = {}
     // Results for current instances inside instance
     const extracted = keys.reduce((acc, key) => {
       const subData = data && data[key]
       const subCurrent = current && current[key]
       const subRawSpec = spec[key]
       const res = createSavingInformation(spec[key], subData, subCurrent)
-      //if (key === 'dependencies') {
-        //console.log('la put amare');
-        //console.log(res);
-      //}
-      return storeSubField(key, subRawSpec, 
+      return storeSubField(key, subRawSpec,
         acc,
         res,
-        subData, subCurrent
-      )
+        subData, subCurrent)
     }, { values: {}, fields: {} })
     const { values, fields } = extracted
 
@@ -107,10 +96,23 @@ export function createSavingInformation(rawSpec, data, current) {
   }
   const { _save } = spec
   if (_save) {
-    const { format, create } = _save
+    const { asValue, format, create } = _save
     const formattedData = format ? format(data) : data
     const formattedCurrent = format ? format(current) : current
 
+    const isAsValue = typeof asValue === 'function'
+      ? asValue(data, current)
+      : false
+
+    // If this should be saved as value instead of as instance
+    // it will format and check if data should be saved
+    if (isAsValue) {
+      const { formatAsValue } = _save
+      const formattedAsValueData = formatAsValue(data)
+      const formattedAsValueCurrent = formatAsValue(current)
+      return !_isEqual(formattedAsValueData, formattedAsValueCurrent)
+        ? formattedAsValueData : undefined
+    }
     const willSave = checkWillSave(_save, formattedData, formattedCurrent)
     const result = {}
     result._self = null
@@ -128,5 +130,5 @@ export function createSavingInformation(rawSpec, data, current) {
     return result
   }
 
-  return !_isEqual(data, current) ? data: undefined
+  return !_isEqual(data, current) ? data : undefined
 }

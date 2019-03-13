@@ -27,7 +27,6 @@ export function save(rawSpec, data, current) {
       if (typeof res !== 'undefined') {
         if (res) {
           if (typeof res._self !== 'function') {
-
             if (res._self) {
               if (_save) {
                 const { as, create } = _save
@@ -68,7 +67,6 @@ export function save(rawSpec, data, current) {
                   }
                 }
               } else {
-
                 if (subIsArray) {
                   const { create } = subSpec
                   if (create) {
@@ -79,10 +77,10 @@ export function save(rawSpec, data, current) {
                         values[as || key] = res
                       }
                     }
-                    //if (key === 'academicLevels') {
-                      //console.log('debug 2')
-                      //console.log(res)
-                    //}
+                    // if (key === 'academicLevels') {
+                    // console.log('debug 2')
+                    // console.log(res)
+                    // }
                   }
                 } else {
                   values[key] = res
@@ -149,13 +147,11 @@ export function fill(rawSpec, data, onlyExistentFields) {
   }
   if (keys.length > 0) {
     return keys.reduce((acc, key) => {
-
-
       const { spec: subSpec } = getSpecInfo(spec[key])
       const { _target } = subSpec
 
       if (onlyExistentFields) {
-        if(typeof data[_target || key] === 'undefined') {
+        if (typeof data[_target || key] === 'undefined') {
           return acc
         }
       }
@@ -218,23 +214,24 @@ export async function processSave(spec, info, data, options) {
   }
   try {
     const resInfo = info(data, options)
-    const { name, request, format, onSuccess, onFailure, options: infoOptions } = resInfo
+    const {
+      name, request, format, onSuccess, onFailure, options: infoOptions,
+    } = resInfo
 
     const { resultHandler } = spec._save
-  //const selfResult = await (resultHandler ? resultHandler(request) : request)
+    // const selfResult = await (resultHandler ? resultHandler(request) : request)
     const jsonData = await request
     const selfResult = await (jsonData.json())
-    const result = format ? format(selfResult): data
+    const result = format ? format(selfResult) : data
     if (onSuccess) {
       onSuccess(result, infoOptions)
     }
     return result
-
-  } catch(error) {
+  } catch (error) {
     console.log('error: saving');
     console.log(error);
     if (onFailure) {
-      onFailure(error, infoOptions) 
+      onFailure(error, infoOptions)
     }
     return { error }
   }
